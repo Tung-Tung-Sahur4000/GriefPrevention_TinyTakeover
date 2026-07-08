@@ -9,6 +9,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
+import org.bukkit.util.Vector;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -24,9 +25,14 @@ import org.jetbrains.annotations.NotNull;
  * This event is preferred over Bukkit's version on Paper servers because it fires
  * first and is not deprecated on Paper.
  * <p>
- * <b>Known limitation:</b> Wind Burst enchantment knockback cannot be blocked due to
- * a Paper bug where cancelling {@link EntityPushedByEntityAttackEvent} does not prevent
- * the knockback. See <a href="https://github.com/PaperMC/Paper/issues/13079">Paper #13079</a>.
+ * <b>Wind Burst mitigation:</b> Cancelling {@link EntityPushedByEntityAttackEvent} does not on
+ * its own stop Wind Burst enchantment explosion knockback, due to a Paper bug where the
+ * cancellation flag is ignored for that effect. See
+ * <a href="https://github.com/PaperMC/Paper/issues/13079">Paper #13079</a>. As a workaround, when
+ * a push is blocked its acceleration vector is also zeroed via
+ * {@link EntityPushedByEntityAttackEvent#setAcceleration(Vector)}, which neutralizes the knockback
+ * even when the cancellation is disregarded. This is a no-op when cancellation works normally, as a
+ * zeroed acceleration is simply not applied.
  */
 public class PaperKnockbackProtectionHandler extends KnockbackProtectionHandler
 {
@@ -56,7 +62,8 @@ public class PaperKnockbackProtectionHandler extends KnockbackProtectionHandler
      * This is Paper-specific and handles knockback that doesn't go through
      * the normal {@link EntityKnockbackByEntityEvent}.
      * <p>
-     * Note: Wind Burst enchantment knockback bypasses this due to Paper bug #13079.
+     * Note: Wind Burst enchantment knockback ignores this event's cancellation on Paper
+     * (bug #13079), so a blocked push additionally zeroes the acceleration vector below.
      */
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
     public void onEntityPushedByEntityAttack(@NotNull EntityPushedByEntityAttackEvent event)
@@ -84,6 +91,14 @@ public class PaperKnockbackProtectionHandler extends KnockbackProtectionHandler
         else
         {
             handleKnockbackEntity(event, attacker, event.getEntity());
+        }
+
+        // Workaround for Paper #13079: cancelling this event does not stop Wind Burst explosion
+        // knockback on its own. Zeroing the acceleration vector neutralizes the push directly, so
+        // protected players and entities are not launched even when the cancellation is ignored.
+        if (event.isCancelled())
+        {
+            event.setAcceleration(new Vector(0, 0, 0));
         }
     }
 
