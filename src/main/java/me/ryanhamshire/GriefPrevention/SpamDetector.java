@@ -28,6 +28,13 @@ class SpamDetector
         return data;
     }
 
+    //discards spam-tracking data for a chatter, e.g. when they disconnect, so the
+    //per-chatter map doesn't grow unbounded over the server's lifetime
+    void clearChatterData(UUID chatterID)
+    {
+        this.dataStore.remove(chatterID);
+    }
+
     SpamAnalysisResult AnalyzeMessage(UUID chatterID, String message, long timestamp)
     {
         SpamAnalysisResult result = new SpamAnalysisResult();

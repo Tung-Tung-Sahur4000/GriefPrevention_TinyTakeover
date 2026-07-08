@@ -628,7 +628,12 @@ class PlayerEventHandler implements Listener
         long now = nowDate.getTime();
         PlayerData playerData = this.dataStore.getPlayerData(playerID);
         playerData.lastSpawn = now;
-        this.lastLoginThisServerSessionMap.put(playerID, nowDate);
+        //only track login time when the login-cooldown anti-spam feature can actually use it
+        //(see onPlayerLogin); otherwise this map would grow one entry per unique player forever
+        if (instance.config_spam_enabled && instance.config_spam_loginCooldownSeconds > 0)
+        {
+            this.lastLoginThisServerSessionMap.put(playerID, nowDate);
+        }
 
         //if newish, prevent chat until he's moved a bit to prove he's not a bot
         if (GriefPrevention.isNewToServer(player) && !player.hasPermission("griefprevention.premovementchat"))
@@ -793,7 +798,8 @@ class PlayerEventHandler implements Listener
             String joinMessage = event.getJoinMessage();
             if (joinMessage != null && !joinMessage.isEmpty())
             {
-                Integer taskID = this.heldLogoutMessages.get(player.getUniqueId());
+                //remove (not just read) the held entry so the map doesn't retain it after rejoin
+                Integer taskID = this.heldLogoutMessages.remove(player.getUniqueId());
                 if (taskID != null && Bukkit.getScheduler().isQueued(taskID))
                 {
                     Bukkit.getScheduler().cancelTask(taskID);
@@ -917,6 +923,10 @@ class PlayerEventHandler implements Listener
         //drop data about this player
         this.dataStore.clearCachedPlayerData(playerID);
 
+        //drop per-session bookkeeping so these maps don't grow unbounded over the server's lifetime
+        this.deathTimestamps.remove(playerID);
+        this.spamDetector.clearChatterData(playerID);
+
         //send quit message later, but only if the player stays offline
         if (instance.config_spam_logoutMessageDelaySeconds > 0)
         {
@@ -924,7 +934,13 @@ class PlayerEventHandler implements Listener
             if (quitMessage != null && !quitMessage.isEmpty())
             {
                 BroadcastMessageTask task = new BroadcastMessageTask(quitMessage);
-                int taskID = Bukkit.getScheduler().scheduleSyncDelayedTask(instance, task, 20L * instance.config_spam_logoutMessageDelaySeconds);
+                //clear the held entry once the delayed broadcast runs so the map doesn't retain
+                //an entry per player who stays offline
+                int taskID = Bukkit.getScheduler().scheduleSyncDelayedTask(instance, () ->
+                {
+                    task.run();
+                    this.heldLogoutMessages.remove(playerID);
+                }, 20L * instance.config_spam_logoutMessageDelaySeconds);
                 this.heldLogoutMessages.put(playerID, taskID);
                 event.setQuitMessage("");
             }
