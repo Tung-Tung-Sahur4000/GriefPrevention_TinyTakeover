@@ -2578,8 +2578,26 @@ public class GriefPrevention extends JavaPlugin
         ArrayList<Claim> targetClaims = new ArrayList<>();
         if (claim == null)
         {
+            //standing outside any claim: rather than silently granting to ALL of the player's claims, ask
+            //which claim they mean. one claim is unambiguous; several require them to pick by standing in it.
             PlayerData playerData = this.dataStore.getPlayerData(player.getUniqueId());
-            targetClaims.addAll(playerData.getClaims());
+            Vector<Claim> ownedClaims = playerData.getClaims();
+            if (ownedClaims.size() == 1)
+            {
+                targetClaims.add(ownedClaims.get(0));
+            }
+            else if (ownedClaims.size() > 1)
+            {
+                GriefPrevention.sendMessage(player, TextMode.Instr, Messages.GrantPermissionWhichClaim);
+                int index = 1;
+                for (Claim ownedClaim : ownedClaims)
+                {
+                    player.sendMessage(ChatColor.YELLOW.toString() + index + ". " + ChatColor.GRAY + getClaimListEntry(ownedClaim));
+                    index++;
+                }
+                return;
+            }
+            //zero claims falls through to the empty-target check below
         }
         else
         {

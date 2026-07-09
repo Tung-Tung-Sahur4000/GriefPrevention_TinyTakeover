@@ -61,6 +61,7 @@ public enum Messages
     AbandonSuccess("Claim abandoned.  You now have {0} available claim blocks.", "0: remaining claim blocks"),
     ConfirmAbandonAllClaims("Are you sure you want to abandon ALL of your claims?  Please confirm with /abandonallclaims confirm"),
     GrantPermissionNoClaim("Stand inside the claim where you want to grant permission."),
+    GrantPermissionWhichClaim("You have several claims - stand inside the one you want to grant permission in.  Your claims:", "shown before a numbered list of the player's claims"),
     GrantPermissionConfirmation("Granted {0} permission to {1} {2}.", "0: target player; 1: permission description; 2: scope (changed claims)"),
     GrantPermissionConfirmWarning("WARNING: This will let {0} {1} {2}.  Make sure you trust them.", "0: target player; 1: permission description; 2: scope (changed claims)"),
     GrantPermissionConfirmInstruction("If you're sure, run the same command again followed by \"confirm\"."),
