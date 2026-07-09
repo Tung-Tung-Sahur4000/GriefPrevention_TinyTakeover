@@ -67,6 +67,9 @@ public class PlayerData
     //a freshly created claim awaiting a name typed into chat, or null if the player isn't naming a claim
     public Claim claimAwaitingName = null;
 
+    //when the naming prompt was shown, so a stale prompt doesn't silently eat an unrelated chat message later
+    public long claimAwaitingNameTimestamp = 0;
+
     //whether or not the player has a pending /trapped rescue
     public boolean pendingTrapped = false;
 

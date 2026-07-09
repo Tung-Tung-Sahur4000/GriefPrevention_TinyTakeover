@@ -174,6 +174,9 @@ class PlayerEventHandler implements Listener
     //maximum length of a player-chosen claim name, to keep name displays tidy
     private static final int MAX_CLAIM_NAME_LENGTH = 48;
 
+    //how long after the naming prompt a chat message is still treated as the claim's name
+    private static final long CLAIM_NAME_PROMPT_TIMEOUT_MILLIS = 60_000L;
+
     /**
      * Applies a claim name typed into chat right after a claim was created. Runs on the main thread.
      * A message of "skip" or "cancel" (or an empty name) leaves the claim unnamed.
@@ -225,11 +228,16 @@ class PlayerEventHandler implements Listener
         if (claimAwaitingName != null)
         {
             chattingData.claimAwaitingName = null;
-            //this message is a claim name (or a request to skip), not public chat
-            event.setCancelled(true);
-            //apply on the main thread; chat events fire asynchronously
-            Bukkit.getScheduler().runTask(instance, () -> applyClaimName(player, claimAwaitingName, message));
-            return;
+            //only treat the message as a name if the prompt is still fresh; otherwise let it be normal chat so a
+            //forgotten prompt doesn't silently eat an unrelated message sent much later
+            if (System.currentTimeMillis() - chattingData.claimAwaitingNameTimestamp <= CLAIM_NAME_PROMPT_TIMEOUT_MILLIS)
+            {
+                //this message is a claim name (or a request to skip), not public chat
+                event.setCancelled(true);
+                //apply on the main thread; chat events fire asynchronously
+                Bukkit.getScheduler().runTask(instance, () -> applyClaimName(player, claimAwaitingName, message));
+                return;
+            }
         }
 
         boolean muted = this.handlePlayerChat(player, message, event);
@@ -2262,6 +2270,7 @@ class PlayerEventHandler implements Listener
 
                     //prompt the player to name the claim by typing it in chat (or "skip" to leave it unnamed)
                     playerData.claimAwaitingName = result.claim;
+                    playerData.claimAwaitingNameTimestamp = System.currentTimeMillis();
                     GriefPrevention.sendMessage(player, TextMode.Instr, Messages.NameClaimPrompt);
 
                     //if it's a big claim, tell the player about subdivisions
