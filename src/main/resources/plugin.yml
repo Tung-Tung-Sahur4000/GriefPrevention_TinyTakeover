@@ -33,9 +33,14 @@ commands:
       usage: /<command> <player>.  Grants a player access to your inventory, crops, animals, bed, and buttons/levers.
       aliases: ct
       permission: griefprevention.claims
+    interactiontrust:
+      description: Grants a player use of your claim's buttons, levers, and switches, without container access.
+      usage: /<command> <player>.  Grants a player use of your buttons, levers, and switches.
+      aliases: it
+      permission: griefprevention.claims
     accesstrust:
-      description: Grants a player entry to your claim(s) and use of your bed, buttons, and levers.
-      usage: /<command> <player>.  Grants a player access to your bed, buttons, and levers.
+      description: Grants a player entry to your claim(s) and use of your doors, gates, and bed.
+      usage: /<command> <player>.  Grants a player access to your doors, gates, and bed.
       aliases: at
       permission: griefprevention.claims
     permissiontrust:

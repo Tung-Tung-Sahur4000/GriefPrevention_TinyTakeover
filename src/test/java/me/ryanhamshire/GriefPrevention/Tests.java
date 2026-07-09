@@ -292,4 +292,26 @@ public class Tests
         assertTrue(result.shouldWarnChatter);
         assertFalse(result.shouldBanChatter);
     }
+
+    @Test
+    public void testInteractionTrustSitsBetweenContainerAndAccess()
+    {
+        //higher trust grants Interaction
+        assertTrue(ClaimPermission.Interaction.isGrantedBy(ClaimPermission.Container));
+        assertTrue(ClaimPermission.Interaction.isGrantedBy(ClaimPermission.Build));
+        assertTrue(ClaimPermission.Interaction.isGrantedBy(ClaimPermission.Manage));
+        //the deprecated Inventory alias behaves like Container
+        assertTrue(ClaimPermission.Interaction.isGrantedBy(ClaimPermission.Inventory));
+
+        //Interaction grants Access, but not Container/Build
+        assertTrue(ClaimPermission.Access.isGrantedBy(ClaimPermission.Interaction));
+        assertFalse(ClaimPermission.Container.isGrantedBy(ClaimPermission.Interaction));
+        assertFalse(ClaimPermission.Build.isGrantedBy(ClaimPermission.Interaction));
+
+        //Access alone does not grant Interaction
+        assertFalse(ClaimPermission.Interaction.isGrantedBy(ClaimPermission.Access));
+
+        //Interaction grants itself
+        assertTrue(ClaimPermission.Interaction.isGrantedBy(ClaimPermission.Interaction));
+    }
 }

@@ -37,6 +37,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -117,6 +118,12 @@ public class Claim
     //main constructor.  note that only creating a claim instance does nothing - a claim must be added to the data store to be effective
     Claim(Location lesserBoundaryCorner, Location greaterBoundaryCorner, UUID ownerID, List<String> builderIDs, List<String> containerIDs, List<String> accessorIDs, List<String> managerIDs, boolean inheritNothing, Long id)
     {
+        this(lesserBoundaryCorner, greaterBoundaryCorner, ownerID, builderIDs, containerIDs, Collections.emptyList(), accessorIDs, managerIDs, inheritNothing, id);
+    }
+
+    //main constructor including interaction-trusted players.  note that only creating a claim instance does nothing - a claim must be added to the data store to be effective
+    Claim(Location lesserBoundaryCorner, Location greaterBoundaryCorner, UUID ownerID, List<String> builderIDs, List<String> containerIDs, List<String> interactorIDs, List<String> accessorIDs, List<String> managerIDs, boolean inheritNothing, Long id)
+    {
         //modification date
         this.modifiedDate = Calendar.getInstance().getTime();
 
@@ -156,6 +163,11 @@ public class Claim
         for (String containerID : containerIDs)
         {
             this.setPermission(containerID, ClaimPermission.Container);
+        }
+
+        for (String interactorID : interactorIDs)
+        {
+            this.setPermission(interactorID, ClaimPermission.Interaction);
         }
 
         for (String accessorID : accessorIDs)
@@ -634,7 +646,7 @@ public class Claim
 
     //gets ALL permissions
     //useful for  making copies of permissions during a claim resize and listing all permissions in a claim
-    public void getPermissions(ArrayList<String> builders, ArrayList<String> containers, ArrayList<String> accessors, ArrayList<String> managers)
+    public void getPermissions(ArrayList<String> builders, ArrayList<String> containers, ArrayList<String> interactors, ArrayList<String> accessors, ArrayList<String> managers)
     {
         //loop through all the entries in the hash map
         for (Map.Entry<String, ClaimPermission> entry : this.playerIDToClaimPermissionMap.entrySet())
@@ -648,6 +660,10 @@ public class Claim
             {
                 containers.add(entry.getKey());
             }
+            else if (entry.getValue() == ClaimPermission.Interaction)
+            {
+                interactors.add(entry.getKey());
+            }
             else
             {
                 accessors.add(entry.getKey());
@@ -656,6 +672,17 @@ public class Claim
 
         //managers are handled a little differently
         managers.addAll(this.managers);
+    }
+
+    /**
+     * @deprecated Use {@link #getPermissions(ArrayList, ArrayList, ArrayList, ArrayList, ArrayList)}, which also
+     * reports {@link ClaimPermission#Interaction} grants. This overload folds interactors into accessors for
+     * backwards compatibility.
+     */
+    @Deprecated
+    public void getPermissions(ArrayList<String> builders, ArrayList<String> containers, ArrayList<String> accessors, ArrayList<String> managers)
+    {
+        getPermissions(builders, containers, accessors, accessors, managers);
     }
 
     //returns a copy of the location representing lower x, y, z limits

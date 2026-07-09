@@ -513,6 +513,9 @@ public class FlatFileDataStore extends DataStore
 
         List<String> containers = yaml.getStringList("Containers");
 
+        //Interactors is optional; claims saved before interaction trust existed simply have no entry
+        List<String> interactors = yaml.getStringList("Interactors");
+
         List<String> accessors = yaml.getStringList("Accessors");
 
         List<String> managers = yaml.getStringList("Managers");
@@ -522,7 +525,7 @@ public class FlatFileDataStore extends DataStore
         out_parentID.add(yaml.getLong("Parent Claim ID", -1L));
 
         //instantiate
-        claim = new Claim(lesserBoundaryCorner, greaterBoundaryCorner, ownerID, builders, containers, accessors, managers, inheritNothing, claimID);
+        claim = new Claim(lesserBoundaryCorner, greaterBoundaryCorner, ownerID, builders, containers, interactors, accessors, managers, inheritNothing, claimID);
         claim.modifiedDate = new Date(lastModifiedDate);
         claim.id = claimID;
 
@@ -544,12 +547,14 @@ public class FlatFileDataStore extends DataStore
 
         ArrayList<String> builders = new ArrayList<>();
         ArrayList<String> containers = new ArrayList<>();
+        ArrayList<String> interactors = new ArrayList<>();
         ArrayList<String> accessors = new ArrayList<>();
         ArrayList<String> managers = new ArrayList<>();
-        claim.getPermissions(builders, containers, accessors, managers);
+        claim.getPermissions(builders, containers, interactors, accessors, managers);
 
         yaml.set("Builders", builders);
         yaml.set("Containers", containers);
+        yaml.set("Interactors", interactors);
         yaml.set("Accessors", accessors);
         yaml.set("Managers", managers);
 

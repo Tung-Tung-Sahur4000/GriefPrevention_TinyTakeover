@@ -1657,7 +1657,7 @@ class PlayerEventHandler implements Listener
             }
         }
 
-        //otherwise apply rules for buttons and switches
+        //otherwise apply rules for buttons and switches (interaction trust - a step above basic access)
         else if (clickedBlock != null && instance.config_claims_preventButtonsSwitches && (Tag.BUTTONS.isTagged(clickedBlockType) || clickedBlockType == Material.LEVER))
         {
             if (playerData == null) playerData = this.dataStore.getPlayerData(player.getUniqueId());
@@ -1666,11 +1666,11 @@ class PlayerEventHandler implements Listener
             {
                 playerData.lastClaim = claim;
 
-                Supplier<String> noAccessReason = claim.checkPermission(player, ClaimPermission.Access, event);
-                if (noAccessReason != null)
+                Supplier<String> noInteractionReason = claim.checkPermission(player, ClaimPermission.Interaction, event);
+                if (noInteractionReason != null)
                 {
                     event.setCancelled(true);
-                    GriefPrevention.sendMessage(player, TextMode.Err, noAccessReason.get());
+                    GriefPrevention.sendMessage(player, TextMode.Err, noInteractionReason.get());
                     return;
                 }
             }

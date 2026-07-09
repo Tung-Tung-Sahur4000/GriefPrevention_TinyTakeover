@@ -33,17 +33,23 @@ public enum ClaimPermission
      */
     Manage(Messages.NoPermissionTrust),
     /**
-     * ClaimPermission used for building checks. Grants {@link #Container} and {@link #Access}.
+     * ClaimPermission used for building checks. Grants {@link #Container}, {@link #Interaction}, and {@link #Access}.
      * Command: /trust
      */
     Build(Messages.NoBuildPermission),
     /**
-     * ClaimPermission used for inventory management, such as containers and farming. Grants {@link #Access}.
+     * ClaimPermission used for inventory management, such as containers and farming. Grants {@link #Interaction} and {@link #Access}.
      * Command: /containertrust
      */
     Container(Messages.NoContainersPermission),
     /**
-     * ClaimPermission used for basic access.
+     * ClaimPermission used for interacting with mechanisms and entities - buttons, levers, pressure plates, and
+     * non-container entity interactions - without granting container access. Grants {@link #Access}.
+     * Command: /interactiontrust
+     */
+    Interaction(Messages.NoInteractionPermission),
+    /**
+     * ClaimPermission used for basic access - opening doors and gates, using beds, and reading lecterns.
      * Command: /accesstrust
      */
     Access(Messages.NoAccessPermission),
