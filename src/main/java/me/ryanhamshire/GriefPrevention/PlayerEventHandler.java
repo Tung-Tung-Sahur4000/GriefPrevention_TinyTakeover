@@ -1627,9 +1627,15 @@ class PlayerEventHandler implements Listener
 
                 (instance.config_claims_lockWoodenDoors && Tag.WOODEN_DOORS.isTagged(clickedBlockType) ||
 
+                //iron and copper doors are always locked, regardless of the wooden-door setting
+                (Tag.DOORS.isTagged(clickedBlockType) && !Tag.WOODEN_DOORS.isTagged(clickedBlockType)) ||
+
                 instance.config_claims_preventButtonsSwitches && Tag.BEDS.isTagged(clickedBlockType) ||
 
                 instance.config_claims_lockTrapDoors && Tag.WOODEN_TRAPDOORS.isTagged(clickedBlockType) ||
+
+                //iron and copper trapdoors are always locked, regardless of the wooden-trapdoor setting
+                (Tag.TRAPDOORS.isTagged(clickedBlockType) && !Tag.WOODEN_TRAPDOORS.isTagged(clickedBlockType)) ||
 
                 instance.config_claims_lecternReadingRequiresAccessTrust && clickedBlockType == Material.LECTERN ||
 
