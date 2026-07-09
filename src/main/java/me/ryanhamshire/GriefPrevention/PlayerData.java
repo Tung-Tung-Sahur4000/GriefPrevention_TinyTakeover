@@ -64,8 +64,9 @@ public class PlayerData
     //the claim this player is currently subdividing
     public Claim claimSubdividing = null;
 
-    //a freshly created claim awaiting a name typed into chat, or null if the player isn't naming a claim
-    public Claim claimAwaitingName = null;
+    //id of a freshly created claim awaiting a name typed into chat, or null if the player isn't naming a claim.
+    //stored by id rather than reference so a deleted claim is never kept alive by a pending naming prompt.
+    public Long claimAwaitingNameId = null;
 
     //when the naming prompt was shown, so a stale prompt doesn't silently eat an unrelated chat message later
     public long claimAwaitingNameTimestamp = 0;

@@ -182,13 +182,15 @@ class PlayerEventHandler implements Listener
      * A message of "skip" or "cancel" (or an empty name) leaves the claim unnamed.
      *
      * @param player the player naming the claim
-     * @param claim the freshly created claim being named
+     * @param claimId the id of the freshly created claim being named
      * @param rawName the chat message to use as the name
      */
-    private void applyClaimName(@NotNull Player player, @NotNull Claim claim, @NotNull String rawName)
+    private void applyClaimName(@NotNull Player player, long claimId, @NotNull String rawName)
     {
-        //if the claim was removed before the name arrived (e.g. abandoned), there's nothing to do
-        if (!claim.inDataStore) return;
+        //re-fetch by id so we never hold a reference to a claim; if it was removed before the name
+        //arrived (e.g. abandoned), there's nothing to do
+        Claim claim = this.dataStore.getClaim(claimId);
+        if (claim == null || !claim.inDataStore) return;
 
         //strip color codes and trim, so names stay plain and tidy
         String name = ChatColor.stripColor(rawName).trim();
@@ -224,10 +226,10 @@ class PlayerEventHandler implements Listener
 
         //if this player just created a claim and is being asked to name it, consume this message as the name
         PlayerData chattingData = this.dataStore.getPlayerData(player.getUniqueId());
-        Claim claimAwaitingName = chattingData.claimAwaitingName;
-        if (claimAwaitingName != null)
+        Long claimAwaitingNameId = chattingData.claimAwaitingNameId;
+        if (claimAwaitingNameId != null)
         {
-            chattingData.claimAwaitingName = null;
+            chattingData.claimAwaitingNameId = null;
             //only treat the message as a name if the prompt is still fresh; otherwise let it be normal chat so a
             //forgotten prompt doesn't silently eat an unrelated message sent much later
             if (System.currentTimeMillis() - chattingData.claimAwaitingNameTimestamp <= CLAIM_NAME_PROMPT_TIMEOUT_MILLIS)
@@ -235,7 +237,7 @@ class PlayerEventHandler implements Listener
                 //this message is a claim name (or a request to skip), not public chat
                 event.setCancelled(true);
                 //apply on the main thread; chat events fire asynchronously
-                Bukkit.getScheduler().runTask(instance, () -> applyClaimName(player, claimAwaitingName, message));
+                Bukkit.getScheduler().runTask(instance, () -> applyClaimName(player, claimAwaitingNameId, message));
                 return;
             }
         }
@@ -2269,7 +2271,7 @@ class PlayerEventHandler implements Listener
                     playerData.lastShovelLocation = null;
 
                     //prompt the player to name the claim by typing it in chat (or "skip" to leave it unnamed)
-                    playerData.claimAwaitingName = result.claim;
+                    playerData.claimAwaitingNameId = result.claim.getID();
                     playerData.claimAwaitingNameTimestamp = System.currentTimeMillis();
                     GriefPrevention.sendMessage(player, TextMode.Instr, Messages.NameClaimPrompt);
 
