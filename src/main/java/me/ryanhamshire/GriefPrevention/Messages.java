@@ -62,6 +62,8 @@ public enum Messages
     ConfirmAbandonAllClaims("Are you sure you want to abandon ALL of your claims?  Please confirm with /abandonallclaims confirm"),
     GrantPermissionNoClaim("Stand inside the claim where you want to grant permission."),
     GrantPermissionConfirmation("Granted {0} permission to {1} {2}.", "0: target player; 1: permission description; 2: scope (changed claims)"),
+    GrantPermissionConfirmWarning("WARNING: This will let {0} {1} {2}.  Make sure you trust them.", "0: target player; 1: permission description; 2: scope (changed claims)"),
+    GrantPermissionConfirmInstruction("If you're sure, run the same command again followed by \"confirm\"."),
     ManageUniversalPermissionsInstruction("To manage permissions for ALL your claims, stand outside them."),
     ManageOneClaimPermissionsInstruction("To manage permissions for a specific claim, stand inside it."),
     CollectivePublic("the public", "as in 'granted the public permission to...'"),

@@ -1211,11 +1211,13 @@ public class GriefPrevention extends JavaPlugin
         //trust <player>
         else if (cmd.getName().equalsIgnoreCase("trust") && player != null)
         {
-            //requires exactly one parameter, the other player's name
-            if (args.length != 1) return false;
+            //the other player's name, optionally followed by "confirm" for this high-access grant
+            if (args.length < 1 || args.length > 2) return false;
+            boolean confirmed = args.length == 2 && args[1].equalsIgnoreCase("confirm");
+            if (args.length == 2 && !confirmed) return false;
 
             //most trust commands use this helper method, it keeps them consistent
-            this.handleTrustCommand(player, ClaimPermission.Build, args[0]);
+            this.handleTrustCommand(player, ClaimPermission.Build, args[0], confirmed);
 
             return true;
         }
@@ -1587,10 +1589,12 @@ public class GriefPrevention extends JavaPlugin
         //permissiontrust <player>
         else if (cmd.getName().equalsIgnoreCase("permissiontrust") && player != null)
         {
-            //requires exactly one parameter, the other player's name
-            if (args.length != 1) return false;
+            //the other player's name, optionally followed by "confirm" for this high-access grant
+            if (args.length < 1 || args.length > 2) return false;
+            boolean confirmed = args.length == 2 && args[1].equalsIgnoreCase("confirm");
+            if (args.length == 2 && !confirmed) return false;
 
-            this.handleTrustCommand(player, ClaimPermission.Manage, args[0]);
+            this.handleTrustCommand(player, ClaimPermission.Manage, args[0], confirmed);
 
             return true;
         }
@@ -2424,6 +2428,49 @@ public class GriefPrevention extends JavaPlugin
     //helper method keeps the trust commands consistent and eliminates duplicate code
     private void handleTrustCommand(Player player, ClaimPermission permissionLevel, String recipientName)
     {
+        handleTrustCommand(player, permissionLevel, recipientName, false);
+    }
+
+    /**
+     * @return the ChatColor used to signal the severity of a {@link ClaimPermission} in trust messages -
+     * the more access a level grants, the more alarming its color.
+     */
+    private ChatColor trustSeverityColor(ClaimPermission permissionLevel)
+    {
+        if (permissionLevel == ClaimPermission.Manage) return ChatColor.DARK_RED;
+        if (permissionLevel == ClaimPermission.Build) return ChatColor.RED;
+        if (permissionLevel == ClaimPermission.Container) return ChatColor.GOLD;
+        if (permissionLevel == ClaimPermission.Interaction) return ChatColor.AQUA;
+        return ChatColor.GREEN; //Access - least access granted
+    }
+
+    /**
+     * @return true if granting this {@link ClaimPermission} hands over enough control that the granting player
+     * should confirm before it takes effect (full build access or the ability to manage other players' trust).
+     */
+    private boolean isHighSeverityTrust(ClaimPermission permissionLevel)
+    {
+        return permissionLevel == ClaimPermission.Build || permissionLevel == ClaimPermission.Manage;
+    }
+
+    /**
+     * @return a short human-readable description of what a {@link ClaimPermission} allows, e.g. "build".
+     */
+    private String trustDescription(ClaimPermission permissionLevel)
+    {
+        if (permissionLevel == null || permissionLevel == ClaimPermission.Manage)
+            return this.dataStore.getMessage(Messages.PermissionsPermission);
+        if (permissionLevel == ClaimPermission.Build)
+            return this.dataStore.getMessage(Messages.BuildPermission);
+        if (permissionLevel == ClaimPermission.Access)
+            return this.dataStore.getMessage(Messages.AccessPermission);
+        if (permissionLevel == ClaimPermission.Interaction)
+            return this.dataStore.getMessage(Messages.InteractionPermission);
+        return this.dataStore.getMessage(Messages.ContainersPermission); //Container
+    }
+
+    private void handleTrustCommand(Player player, ClaimPermission permissionLevel, String recipientName, boolean confirmed)
+    {
         //determine which claim the player is standing in
         Claim claim = this.dataStore.getClaimAt(player.getLocation(), true /*ignore height*/, null);
 
@@ -2504,6 +2551,21 @@ public class GriefPrevention extends JavaPlugin
             identifierToAdd = recipientID.toString();
         }
 
+        //for high-severity grants (full build access, or the power to manage other players' trust), require an
+        //explicit confirmation so trust isn't handed out instantly by mistake. show a color-coded severity warning.
+        if (isHighSeverityTrust(permissionLevel) && !confirmed)
+        {
+            String warnedRecipient = recipientName.equals("public")
+                    ? this.dataStore.getMessage(Messages.CollectivePublic) : recipientName;
+            String scope = claim == null
+                    ? this.dataStore.getMessage(Messages.LocationAllClaims)
+                    : this.dataStore.getMessage(Messages.LocationCurrentClaim);
+            player.sendMessage(trustSeverityColor(permissionLevel) + this.dataStore.getMessage(
+                    Messages.GrantPermissionConfirmWarning, warnedRecipient, trustDescription(permissionLevel), scope));
+            GriefPrevention.sendMessage(player, TextMode.Instr, Messages.GrantPermissionConfirmInstruction);
+            return;
+        }
+
         //calling the event
         TrustChangedEvent event = new TrustChangedEvent(player, targetClaims, permissionLevel, true, identifierToAdd);
         Bukkit.getPluginManager().callEvent(event);
@@ -2532,27 +2594,7 @@ public class GriefPrevention extends JavaPlugin
 
         //notify player
         if (recipientName.equals("public")) recipientName = this.dataStore.getMessage(Messages.CollectivePublic);
-        String permissionDescription;
-        if (permissionLevel == null)
-        {
-            permissionDescription = this.dataStore.getMessage(Messages.PermissionsPermission);
-        }
-        else if (permissionLevel == ClaimPermission.Build)
-        {
-            permissionDescription = this.dataStore.getMessage(Messages.BuildPermission);
-        }
-        else if (permissionLevel == ClaimPermission.Access)
-        {
-            permissionDescription = this.dataStore.getMessage(Messages.AccessPermission);
-        }
-        else if (permissionLevel == ClaimPermission.Interaction)
-        {
-            permissionDescription = this.dataStore.getMessage(Messages.InteractionPermission);
-        }
-        else //ClaimPermission.Container
-        {
-            permissionDescription = this.dataStore.getMessage(Messages.ContainersPermission);
-        }
+        String permissionDescription = trustDescription(permissionLevel);
 
         String location;
         if (claim == null)
@@ -2564,7 +2606,9 @@ public class GriefPrevention extends JavaPlugin
             location = this.dataStore.getMessage(Messages.LocationCurrentClaim);
         }
 
-        GriefPrevention.sendMessage(player, TextMode.Success, Messages.GrantPermissionConfirmation, recipientName, permissionDescription, location);
+        //color-coded by trust severity so it's clear at a glance how much access was granted
+        player.sendMessage(trustSeverityColor(permissionLevel) + this.dataStore.getMessage(
+                Messages.GrantPermissionConfirmation, recipientName, permissionDescription, location));
     }
 
     //helper method to resolve a player by name

@@ -20,7 +20,7 @@ commands:
       permission: griefprevention.abandonallclaims
     trust:
       description: Grants a player full access to your claim(s).
-      usage: /<command> <player>  Grants a player permission to build.  See also /untrust, /containertrust, /accesstrust, and /permissiontrust.
+      usage: /<command> <player> [confirm]  Grants a player permission to build.  Because this is full access, re-run with "confirm" to apply.  See also /untrust, /containertrust, /interactiontrust, /accesstrust, and /permissiontrust.
       aliases: tr
       permission: griefprevention.claims
     untrust:
@@ -45,7 +45,7 @@ commands:
       permission: griefprevention.claims
     permissiontrust:
       description: Grants a player permission to manage the claim trustlist.
-      usage: /<command> <player>.  Permits a player to /trust and /untrust players in the claim.
+      usage: /<command> <player> [confirm].  Permits a player to /trust and /untrust players in the claim.  Because this is high access, re-run with "confirm" to apply.
       aliases: [pt, managetrust]
       permission: griefprevention.claims
     subdivideclaims:
