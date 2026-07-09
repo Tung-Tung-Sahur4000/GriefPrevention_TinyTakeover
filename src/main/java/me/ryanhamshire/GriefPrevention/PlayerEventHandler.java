@@ -171,6 +171,41 @@ class PlayerEventHandler implements Listener
         this.whisperCommands = new MonitoredCommands(instance.config_eavesdrop_whisperCommands);
     }
 
+    //maximum length of a player-chosen claim name, to keep name displays tidy
+    private static final int MAX_CLAIM_NAME_LENGTH = 48;
+
+    /**
+     * Applies a claim name typed into chat right after a claim was created. Runs on the main thread.
+     * A message of "skip" or "cancel" (or an empty name) leaves the claim unnamed.
+     *
+     * @param player the player naming the claim
+     * @param claim the freshly created claim being named
+     * @param rawName the chat message to use as the name
+     */
+    private void applyClaimName(@NotNull Player player, @NotNull Claim claim, @NotNull String rawName)
+    {
+        //if the claim was removed before the name arrived (e.g. abandoned), there's nothing to do
+        if (!claim.inDataStore) return;
+
+        //strip color codes and trim, so names stay plain and tidy
+        String name = ChatColor.stripColor(rawName).trim();
+
+        if (name.isEmpty() || name.equalsIgnoreCase("skip") || name.equalsIgnoreCase("cancel"))
+        {
+            GriefPrevention.sendMessage(player, TextMode.Info, Messages.NameClaimSkipped);
+            return;
+        }
+
+        if (name.length() > MAX_CLAIM_NAME_LENGTH)
+        {
+            name = name.substring(0, MAX_CLAIM_NAME_LENGTH);
+        }
+
+        claim.setName(name);
+        this.dataStore.saveClaim(claim);
+        GriefPrevention.sendMessage(player, TextMode.Success, Messages.NameClaimConfirmation, name);
+    }
+
     //when a player chats, monitor for spam
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
     synchronized void onPlayerChat(AsyncPlayerChatEvent event)
@@ -183,6 +218,19 @@ class PlayerEventHandler implements Listener
         }
 
         String message = event.getMessage();
+
+        //if this player just created a claim and is being asked to name it, consume this message as the name
+        PlayerData chattingData = this.dataStore.getPlayerData(player.getUniqueId());
+        Claim claimAwaitingName = chattingData.claimAwaitingName;
+        if (claimAwaitingName != null)
+        {
+            chattingData.claimAwaitingName = null;
+            //this message is a claim name (or a request to skip), not public chat
+            event.setCancelled(true);
+            //apply on the main thread; chat events fire asynchronously
+            Bukkit.getScheduler().runTask(instance, () -> applyClaimName(player, claimAwaitingName, message));
+            return;
+        }
 
         boolean muted = this.handlePlayerChat(player, message, event);
         Set<Player> recipients = event.getRecipients();
@@ -2211,6 +2259,10 @@ class PlayerEventHandler implements Listener
                     GriefPrevention.sendMessage(player, TextMode.Success, Messages.CreateClaimSuccess);
                     BoundaryVisualization.visualizeClaim(player, result.claim, VisualizationType.CLAIM, clickedBlock);
                     playerData.lastShovelLocation = null;
+
+                    //prompt the player to name the claim by typing it in chat (or "skip" to leave it unnamed)
+                    playerData.claimAwaitingName = result.claim;
+                    GriefPrevention.sendMessage(player, TextMode.Instr, Messages.NameClaimPrompt);
 
                     //if it's a big claim, tell the player about subdivisions
                     if (!player.hasPermission("griefprevention.adminclaims") && result.claim.getArea() >= 1000)

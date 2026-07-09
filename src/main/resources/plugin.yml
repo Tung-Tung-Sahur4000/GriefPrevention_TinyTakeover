@@ -48,6 +48,11 @@ commands:
       usage: /<command> <player> [confirm].  Permits a player to /trust and /untrust players in the claim.  Because this is high access, re-run with "confirm" to apply.
       aliases: [pt, managetrust]
       permission: griefprevention.claims
+    claimname:
+      description: Names the claim you're standing in, or "clear" to remove its name.
+      usage: /<command> <name...>  Names the claim you're standing in.  Use "/<command> clear" to remove the name.
+      aliases: [nameclaim, cn]
+      permission: griefprevention.claims
     subdivideclaims:
       description: Switches the shovel tool to subdivision mode, used to subdivide your claims.
       usage: /<command>

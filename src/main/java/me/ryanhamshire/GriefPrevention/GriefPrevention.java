@@ -1599,6 +1599,45 @@ public class GriefPrevention extends JavaPlugin
             return true;
         }
 
+        //claimname <name...> or claimname clear
+        else if (cmd.getName().equalsIgnoreCase("claimname") && player != null)
+        {
+            if (args.length < 1) return false;
+
+            //name the claim the player is standing in
+            Claim claim = this.dataStore.getClaimAt(player.getLocation(), true, null);
+            if (claim == null)
+            {
+                GriefPrevention.sendMessage(player, TextMode.Err, Messages.TrustListNoClaim);
+                return true;
+            }
+
+            //naming a claim requires the same trust as managing it
+            Supplier<String> errorMessage = claim.checkPermission(player, ClaimPermission.Manage, null);
+            if (errorMessage != null)
+            {
+                GriefPrevention.sendMessage(player, TextMode.Err, Messages.NoPermissionTrust, claim.getOwnerName());
+                return true;
+            }
+
+            //"clear" removes the name
+            if (args.length == 1 && args[0].equalsIgnoreCase("clear"))
+            {
+                claim.setName(null);
+                this.dataStore.saveClaim(claim);
+                GriefPrevention.sendMessage(player, TextMode.Success, Messages.NameClaimSkipped);
+                return true;
+            }
+
+            String name = ChatColor.stripColor(String.join(" ", args)).trim();
+            if (name.length() > 48) name = name.substring(0, 48);
+            claim.setName(name);
+            this.dataStore.saveClaim(claim);
+            GriefPrevention.sendMessage(player, TextMode.Success, Messages.NameClaimConfirmation, name);
+
+            return true;
+        }
+
         //restrictsubclaim
         else if (cmd.getName().equalsIgnoreCase("restrictsubclaim") && player != null)
         {
@@ -1893,7 +1932,7 @@ public class GriefPrevention extends JavaPlugin
                 for (int i = 0; i < playerData.getClaims().size(); i++)
                 {
                     Claim claim = playerData.getClaims().get(i);
-                    GriefPrevention.sendMessage(player, TextMode.Instr, getfriendlyLocationString(claim.getLesserBoundaryCorner()) + this.dataStore.getMessage(Messages.ContinueBlockMath, String.valueOf(claim.getArea())));
+                    GriefPrevention.sendMessage(player, TextMode.Instr, getClaimListEntry(claim) + this.dataStore.getMessage(Messages.ContinueBlockMath, String.valueOf(claim.getArea())));
                 }
 
                 GriefPrevention.sendMessage(player, TextMode.Instr, Messages.EndBlockMath, String.valueOf(playerData.getRemainingClaimBlocks()));
@@ -1923,7 +1962,7 @@ public class GriefPrevention extends JavaPlugin
                 GriefPrevention.sendMessage(player, TextMode.Instr, Messages.ClaimsListHeader);
                 for (Claim claim : claims)
                 {
-                    GriefPrevention.sendMessage(player, TextMode.Instr, getfriendlyLocationString(claim.getLesserBoundaryCorner()));
+                    GriefPrevention.sendMessage(player, TextMode.Instr, getClaimListEntry(claim));
                 }
             }
 
@@ -2375,6 +2414,28 @@ public class GriefPrevention extends JavaPlugin
     public static String getfriendlyLocationString(Location location)
     {
         return location.getWorld().getName() + ": x" + location.getBlockX() + ", z" + location.getBlockZ();
+    }
+
+    /**
+     * Builds a one-line claim list entry showing the claim's name (if any) and the coordinates of both of its
+     * corners, so /claimslist and /adminclaimslist identify each claimed area clearly.
+     *
+     * @param claim the claim to describe
+     * @return a friendly, single-line description of the claim
+     */
+    public static String getClaimListEntry(Claim claim)
+    {
+        Location lesser = claim.getLesserBoundaryCorner();
+        Location greater = claim.getGreaterBoundaryCorner();
+        String coordinates = lesser.getWorld().getName()
+                + ": x" + lesser.getBlockX() + ", z" + lesser.getBlockZ()
+                + " to x" + greater.getBlockX() + ", z" + greater.getBlockZ();
+        String name = claim.getName();
+        if (name != null)
+        {
+            return ChatColor.WHITE + name + ChatColor.GRAY + " - " + coordinates;
+        }
+        return coordinates;
     }
 
     private boolean abandonClaimHandler(Player player, boolean deleteTopLevelClaim)

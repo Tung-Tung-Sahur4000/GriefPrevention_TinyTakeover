@@ -63,6 +63,9 @@ public class Claim
     //id number.  unique to this claim, never changes.
     Long id = null;
 
+    //optional player-chosen name for this claim.  null or empty means unnamed.
+    private String name = null;
+
     //ownerID.  for admin claims, this is NULL
     //use getOwnerName() to get a friendly name (will be "an administrator" for admin claims)
     public UUID ownerID;
@@ -106,6 +109,24 @@ public class Claim
     public Long getID()
     {
         return this.id;
+    }
+
+    /**
+     * @return the player-chosen name for this claim, or null if it has none
+     */
+    public @Nullable String getName()
+    {
+        return this.name;
+    }
+
+    /**
+     * Sets this claim's player-chosen name. Pass null or empty to clear it.
+     *
+     * @param name the new name, or null/empty to make the claim unnamed
+     */
+    public void setName(@Nullable String name)
+    {
+        this.name = (name == null || name.isEmpty()) ? null : name;
     }
 
     //basic constructor, just notes the creation time
@@ -197,6 +218,7 @@ public class Claim
         this.lesserBoundaryCorner = claim.greaterBoundaryCorner.clone();
         this.greaterBoundaryCorner = claim.greaterBoundaryCorner.clone();
         this.id = claim.id;
+        this.name = claim.name;
         this.ownerID = claim.ownerID;
         this.managers = new ArrayList<>(claim.managers);
         this.playerIDToClaimPermissionMap = new HashMap<>(claim.playerIDToClaimPermissionMap);

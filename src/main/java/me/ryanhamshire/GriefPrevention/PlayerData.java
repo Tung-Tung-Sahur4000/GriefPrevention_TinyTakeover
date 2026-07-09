@@ -64,6 +64,9 @@ public class PlayerData
     //the claim this player is currently subdividing
     public Claim claimSubdividing = null;
 
+    //a freshly created claim awaiting a name typed into chat, or null if the player isn't naming a claim
+    public Claim claimAwaitingName = null;
+
     //whether or not the player has a pending /trapped rescue
     public boolean pendingTrapped = false;
 

@@ -528,6 +528,8 @@ public class FlatFileDataStore extends DataStore
         claim = new Claim(lesserBoundaryCorner, greaterBoundaryCorner, ownerID, builders, containers, interactors, accessors, managers, inheritNothing, claimID);
         claim.modifiedDate = new Date(lastModifiedDate);
         claim.id = claimID;
+        //Name is optional; unnamed claims (and claims saved before naming existed) simply have no entry
+        claim.setName(yaml.getString("Name"));
 
         return claim;
     }
@@ -567,6 +569,9 @@ public class FlatFileDataStore extends DataStore
         yaml.set("Parent Claim ID", parentID);
 
         yaml.set("inheritNothing", claim.getSubclaimRestrictions());
+
+        //only written when the claim has a name; unnamed claims omit the key
+        yaml.set("Name", claim.getName());
 
         return yaml.saveToString();
     }
