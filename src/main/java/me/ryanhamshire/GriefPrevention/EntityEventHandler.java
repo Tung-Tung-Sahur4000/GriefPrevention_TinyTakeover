@@ -594,6 +594,27 @@ public class EntityEventHandler implements Listener
     @EventHandler(priority = EventPriority.LOWEST)
     public void onEntitySpawn(CreatureSpawnEvent event)
     {
+        //FEATURE: withers may not be summoned inside land claims
+        if (event.getSpawnReason() == SpawnReason.BUILD_WITHER && !GriefPrevention.instance.config_claims_withersSpawnInClaims)
+        {
+            Location location = event.getLocation();
+            if (GriefPrevention.instance.claimsEnabledForWorld(location.getWorld())
+                    && this.dataStore.getClaimAt(location, false, null) != null)
+            {
+                event.setCancelled(true);
+
+                //the summoning blocks survive a cancelled spawn, so explain why nothing happened
+                for (Player player : location.getWorld().getPlayers())
+                {
+                    if (player.getLocation().distanceSquared(location) < 100)
+                    {
+                        GriefPrevention.sendMessage(player, TextMode.Err, Messages.NoWitherSummonInClaim);
+                    }
+                }
+                return;
+            }
+        }
+
         //these rules apply only to creative worlds
         if (!GriefPrevention.instance.creativeRulesApply(event.getLocation())) return;
 

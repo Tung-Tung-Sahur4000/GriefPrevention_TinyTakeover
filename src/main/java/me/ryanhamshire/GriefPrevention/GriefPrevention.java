@@ -205,6 +205,7 @@ public class GriefPrevention extends JavaPlugin
 
     public boolean config_endermenMoveBlocks;                        //whether or not endermen may move blocks around
     public boolean config_claims_ravagersBreakBlocks;                //whether or not ravagers may break blocks in claims
+    public boolean config_claims_withersSpawnInClaims;               //whether or not withers may be summoned inside claims
     public boolean config_silverfishBreakBlocks;                    //whether silverfish may break blocks
     public boolean config_creaturesTrampleCrops;                    //whether or not non-player entities may trample crops
     public boolean config_rabbitsEatCrops;                          //whether or not rabbits may eat crops
@@ -614,6 +615,7 @@ public class GriefPrevention extends JavaPlugin
         this.config_claims_supplyPlayerManual = config.getBoolean("GriefPrevention.Claims.DeliverManuals", true);
         this.config_claims_manualDeliveryDelaySeconds = config.getInt("GriefPrevention.Claims.ManualDeliveryDelaySeconds", 30);
         this.config_claims_ravagersBreakBlocks = config.getBoolean("GriefPrevention.Claims.RavagersBreakBlocks", true);
+        this.config_claims_withersSpawnInClaims = config.getBoolean("GriefPrevention.Claims.WithersSpawnInClaims", false);
 
         this.config_claims_firespreads = config.getBoolean("GriefPrevention.Claims.FireSpreadsInClaims", false);
         this.config_claims_firedamages = config.getBoolean("GriefPrevention.Claims.FireDamagesInClaims", false);
@@ -771,6 +773,7 @@ public class GriefPrevention extends JavaPlugin
         outConfig.set("GriefPrevention.Claims.DeliverManuals", config_claims_supplyPlayerManual);
         outConfig.set("GriefPrevention.Claims.ManualDeliveryDelaySeconds", config_claims_manualDeliveryDelaySeconds);
         outConfig.set("GriefPrevention.Claims.RavagersBreakBlocks", config_claims_ravagersBreakBlocks);
+        outConfig.set("GriefPrevention.Claims.WithersSpawnInClaims", config_claims_withersSpawnInClaims);
 
         outConfig.set("GriefPrevention.Claims.FireSpreadsInClaims", config_claims_firespreads);
         outConfig.set("GriefPrevention.Claims.FireDamagesInClaims", config_claims_firedamages);
