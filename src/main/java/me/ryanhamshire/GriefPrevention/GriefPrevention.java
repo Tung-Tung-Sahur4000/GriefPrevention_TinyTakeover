@@ -188,6 +188,7 @@ public class GriefPrevention extends JavaPlugin
     public boolean config_lockDeathDropsInNonPvpWorlds;             //whether players' dropped on death items are protected in non-pvp worlds
 
     public boolean config_blockClaimExplosions;                     //whether explosions may destroy claimed blocks
+    public boolean config_allowDeepClaimExplosions;                 //whether explosions may destroy claimed blocks below the surface depth threshold
     public boolean config_blockSurfaceCreeperExplosions;            //whether creeper explosions near or above the surface destroy blocks
     public boolean config_blockSurfaceOtherExplosions;                //whether non-creeper explosions near or above the surface destroy blocks
     public boolean config_blockSkyTrees;                            //whether players can build trees on platforms in the sky
@@ -643,6 +644,7 @@ public class GriefPrevention extends JavaPlugin
         this.config_lockDeathDropsInNonPvpWorlds = config.getBoolean("GriefPrevention.ProtectItemsDroppedOnDeath.NonPvPWorlds", true);
 
         this.config_blockClaimExplosions = config.getBoolean("GriefPrevention.BlockLandClaimExplosions", true);
+        this.config_allowDeepClaimExplosions = config.getBoolean("GriefPrevention.AllowDeepLandClaimExplosions", false);
         this.config_blockSurfaceCreeperExplosions = config.getBoolean("GriefPrevention.BlockSurfaceCreeperExplosions", true);
         this.config_blockSurfaceOtherExplosions = config.getBoolean("GriefPrevention.BlockSurfaceOtherExplosions", true);
         this.config_blockSkyTrees = config.getBoolean("GriefPrevention.LimitSkyTrees", true);
@@ -813,6 +815,7 @@ public class GriefPrevention extends JavaPlugin
         outConfig.set("GriefPrevention.ProtectItemsDroppedOnDeath.NonPvPWorlds", this.config_lockDeathDropsInNonPvpWorlds);
 
         outConfig.set("GriefPrevention.BlockLandClaimExplosions", this.config_blockClaimExplosions);
+        outConfig.set("GriefPrevention.AllowDeepLandClaimExplosions", this.config_allowDeepClaimExplosions);
         outConfig.set("GriefPrevention.BlockSurfaceCreeperExplosions", this.config_blockSurfaceCreeperExplosions);
         outConfig.set("GriefPrevention.BlockSurfaceOtherExplosions", this.config_blockSurfaceOtherExplosions);
         outConfig.set("GriefPrevention.LimitSkyTrees", this.config_blockSkyTrees);

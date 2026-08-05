@@ -477,6 +477,12 @@ public class EntityEventHandler implements Listener
 
         boolean applySurfaceRules = world.getEnvironment() == Environment.NORMAL && ((isCreeper && GriefPrevention.instance.config_blockSurfaceCreeperExplosions) || (!isCreeper && GriefPrevention.instance.config_blockSurfaceOtherExplosions));
 
+        //blocks below this height are considered deep enough to damage
+        int explosionDepth = GriefPrevention.instance.getSeaLevel(world) - 7;
+
+        //claimed blocks are only damageable at depth where configured to be
+        boolean applyDepthRuleInClaims = world.getEnvironment() == Environment.NORMAL && GriefPrevention.instance.config_allowDeepClaimExplosions;
+
         //special rule for creative worlds: explosions don't destroy anything
         if (GriefPrevention.instance.creativeRulesApply(location))
         {
@@ -504,7 +510,9 @@ public class EntityEventHandler implements Listener
             }
 
             //if yes, apply claim exemptions if they should apply
-            if (claim != null && (claim.areExplosivesAllowed || !GriefPrevention.instance.config_blockClaimExplosions))
+            if (claim != null && (claim.areExplosivesAllowed
+                    || !GriefPrevention.instance.config_blockClaimExplosions
+                    || (applyDepthRuleInClaims && block.getY() < explosionDepth)))
             {
                 explodedBlocks.add(block);
                 continue;
@@ -513,7 +521,7 @@ public class EntityEventHandler implements Listener
             //if no, then also consider surface rules
             if (claim == null)
             {
-                if (!applySurfaceRules || block.getLocation().getBlockY() < GriefPrevention.instance.getSeaLevel(world) - 7)
+                if (!applySurfaceRules || block.getLocation().getBlockY() < explosionDepth)
                 {
                     explodedBlocks.add(block);
                 }
